@@ -1,0 +1,82 @@
+#include <iostream>
+#include <thread>
+#include <atomic>
+#include <chrono>
+#include <mutex>
+
+using namespace std;
+std::atomic<int> x = 0;
+
+int main()
+{
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now(); 
+
+	std::thread th1 = std::thread([&]() {
+		for (int i = 0; i < 100000000; ++i)
+		{
+			x += 1;
+		}
+
+		});
+
+	std::thread th2 = std::thread([&]() {
+		for (int i = 0; i < 100000000; ++i)
+		{
+			x += 1;
+		}
+
+		});
+
+	if (th1.joinable())
+		th1.join();
+
+	if (th2.joinable())
+		th2.join();
+
+	std::chrono::duration<double>sec = std::chrono::system_clock::now() - start; 
+
+	std::cout << x << "\n";
+	std::cout << sec.count() << "\n";
+
+	//
+	int x2 = 0;
+	start = std::chrono::system_clock::now();
+
+	std::mutex m; 
+	std::thread th3 = std::thread([&]() {
+		
+		m.lock(); 
+		for (int i = 0; i < 100000000; ++i)
+		{
+			x2 += 1;
+		}
+		m.unlock();
+		});
+
+	std::thread th4 = std::thread([&]() {
+		
+		m.lock();
+		for (int i = 0; i < 100000000; ++i)
+		{
+			x2 += 1;
+		}
+		m.unlock();
+		});
+
+	if (th3.joinable())
+		th3.join();
+
+	if (th4.joinable())
+		th4.join();
+
+	sec = std::chrono::system_clock::now() - start;
+
+	std::cout << x2 << "\n";
+	std::cout << sec.count() << "\n";
+
+	
+
+
+
+	return 0;
+}
